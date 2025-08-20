@@ -1,18 +1,30 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)  # permite que seu bot envie requests de qualquer origem
 
-# Rota raiz apenas para testar
+# === Armazena a configuração recebida ===
+BOT_CONFIG = {}
+
 @app.route("/")
-def index():
-    return "Servidor rodando!", 200
+def home():
+    return "Servidor do Bot ativo!"
 
-# Rota para receber configuração do bot
 @app.route("/config", methods=["POST"])
 def receber_config():
-    data = request.json  # pega o JSON enviado
-    print("Config recebida:", data)  # debug no log
-    return jsonify({"status": "ok"}), 200
+    global BOT_CONFIG
+    data = request.json
+    if not data:
+        return jsonify({"status": "erro", "mensagem": "Nenhum JSON recebido"}), 400
+
+    BOT_CONFIG = data
+    print("💾 Configuração recebida:", BOT_CONFIG)  # Log no servidor
+    return jsonify({"status": "ok", "mensagem": "Configuração salva com sucesso!"})
+
+@app.route("/config", methods=["GET"])
+def enviar_config():
+    return jsonify(BOT_CONFIG)
 
 if __name__ == "__main__":
     import os
