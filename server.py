@@ -1,32 +1,31 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
+from flask import Flask, request
+import json
+import os
 
 app = Flask(__name__)
-CORS(app)  # permite que seu bot envie requests de qualquer origem
 
-# === Armazena a configuração recebida ===
-BOT_CONFIG = {}
+# Cria pasta para salvar configs se não existir
+if not os.path.exists("configs"):
+    os.makedirs("configs")
 
-@app.route("/")
+@app.route('/')
 def home():
-    return "Servidor do Bot ativo!"
+    return "Servidor rodando"
 
-@app.route("/config", methods=["POST"])
+@app.route('/config', methods=['POST'])
 def receber_config():
-    global BOT_CONFIG
-    data = request.json
-    if not data:
-        return jsonify({"status": "erro", "mensagem": "Nenhum JSON recebido"}), 400
+    data = request.json  # pega o JSON enviado pelo bot
+    print("=== Config Recebida ===")
+    print(json.dumps(data, indent=4))  # imprime bonito nos logs do Render
 
-    BOT_CONFIG = data
-    print("💾 Configuração recebida:", BOT_CONFIG)  # Log no servidor
-    return jsonify({"status": "ok", "mensagem": "Configuração salva com sucesso!"})
+    # Salva em arquivo dentro da pasta configs
+    arquivo = os.path.join("configs", "config_recebida.json")
+    with open(arquivo, 'w') as f:
+        json.dump(data, f, indent=4)
 
-@app.route("/config", methods=["GET"])
-def enviar_config():
-    return jsonify(BOT_CONFIG)
+    return {"status": "ok"}
 
-if __name__ == "__main__":
-    import os
-    port = int(os.environ.get("PORT", 5000))  # Render define PORT
-    app.run(host="0.0.0.0", port=port)
+if __name__ == '__main__':
+    # Render define a porta pelo ambiente
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host='0.0.0.0', port=port)
