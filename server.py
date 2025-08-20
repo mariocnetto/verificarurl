@@ -31,7 +31,16 @@ def receber_config():
         print("❌ Erro ao processar config:", e)
         return jsonify({"status": "erro", "mensagem": str(e)}), 500
 
+# === NOVO ENDPOINT PARA VISUALIZAR CONFIG ===
+@app.route("/ver_config", methods=["GET"])
+def ver_config():
+    if os.path.exists(CONFIG_FILE):
+        with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+            dados = json.load(f)
+        return jsonify(dados)
+    return jsonify({"status": "erro", "mensagem": "Arquivo não encontrado"}), 404
+
 if __name__ == "__main__":
-    # Usa porta padrão do Render ou 10000
+    # Usa porta padrão do Render
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
