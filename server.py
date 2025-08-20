@@ -1,31 +1,30 @@
-from flask import Flask, request
-import json
-import os
+from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-# Cria pasta para salvar configs se não existir
-if not os.path.exists("configs"):
-    os.makedirs("configs")
-
-@app.route('/')
-def home():
-    return "Servidor rodando"
-
-@app.route('/config', methods=['POST'])
+# Endpoint para receber a configuração
+@app.route("/config", methods=["POST"])
 def receber_config():
-    data = request.json  # pega o JSON enviado pelo bot
-    print("=== Config Recebida ===")
-    print(json.dumps(data, indent=4))  # imprime bonito nos logs do Render
+    dados = request.json  # pega o JSON enviado
+    if dados is None:
+        print("⚠️ Nenhum dado recebido!")
+        return jsonify({"status": "fail", "message": "Nenhum dado enviado"}), 400
 
-    # Salva em arquivo dentro da pasta configs
-    arquivo = os.path.join("configs", "config_recebida.json")
-    with open(arquivo, 'w') as f:
-        json.dump(data, f, indent=4)
+    # Mostra os dados completos no log
+    print("📝 Config recebida:", dados)
 
-    return {"status": "ok"}
+    # Aqui você pode salvar em arquivo se quiser
+    # with open("ultima_config.json", "w") as f:
+    #     import json
+    #     json.dump(dados, f, indent=4)
 
-if __name__ == '__main__':
-    # Render define a porta pelo ambiente
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host='0.0.0.0', port=port)
+    return jsonify({"status": "ok"}), 200
+
+# Endpoint de teste
+@app.route("/", methods=["GET"])
+def home():
+    return "Servidor ativo!", 200
+
+if __name__ == "__main__":
+    # Porta padrão para Render
+    app.run(host="0.0.0.0", port=10000)
