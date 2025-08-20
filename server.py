@@ -1,30 +1,37 @@
 from flask import Flask, request, jsonify
+import json
+import os
 
 app = Flask(__name__)
 
-# Endpoint para receber a configuração
+# Caminho para salvar as configs recebidas
+CONFIG_FILE = "config_recebida.json"
+
+@app.route("/")
+def home():
+    return "Servidor ativo!"
+
 @app.route("/config", methods=["POST"])
 def receber_config():
-    dados = request.json  # pega o JSON enviado
-    if dados is None:
-        print("⚠️ Nenhum dado recebido!")
-        return jsonify({"status": "fail", "message": "Nenhum dado enviado"}), 400
+    try:
+        dados = request.json
+        if not dados:
+            return jsonify({"status": "erro", "mensagem": "Nenhum JSON recebido"}), 400
 
-    # Mostra os dados completos no log
-    print("📝 Config recebida:", dados)
+        # Mostra no Live Tail do Render
+        print("📝 Config recebida:", dados)
 
-    # Aqui você pode salvar em arquivo se quiser
-    # with open("ultima_config.json", "w") as f:
-    #     import json
-    #     json.dump(dados, f, indent=4)
+        # Salva em arquivo
+        with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+            json.dump(dados, f, indent=4, ensure_ascii=False)
 
-    return jsonify({"status": "ok"}), 200
+        return jsonify({"status": "ok"}), 200
 
-# Endpoint de teste
-@app.route("/", methods=["GET"])
-def home():
-    return "Servidor ativo!", 200
+    except Exception as e:
+        print("❌ Erro ao processar config:", e)
+        return jsonify({"status": "erro", "mensagem": str(e)}), 500
 
 if __name__ == "__main__":
-    # Porta padrão para Render
-    app.run(host="0.0.0.0", port=10000)
+    # Usa porta padrão do Render ou 10000
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
